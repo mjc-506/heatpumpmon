@@ -240,14 +240,14 @@ void pressButton(uint8_t pinnum, uint16_t presslength) {
   if (buttonpause == 0) { //stop pressing stuff if we're paused
     digitalWrite(pinnum, HIGH);
     for (uint8_t i = 0; i < presslength / 75; i++) {
+      yield();
       delay(75);
     }
     digitalWrite(pinnum, LOW);
-    for (uint8_t i = 0; i < 2; i++) {
-      delay(75);
-    }
+    digitalWrite(LED_BUILTIN, HIGH);
+    yield();
+    delay(75);
   }
-  digitalWrite(LED_BUILTIN, HIGH);
 }
 
 ////// Setup
@@ -274,6 +274,7 @@ void setup() {
   digitalWrite(LED_BUILTIN, LOW);
 
   // WiFi connection
+  WiFi.mode(WIFI_STA);
   WiFi.begin(ssid, password);
 
   // Wait for connection
@@ -380,6 +381,9 @@ void loop()
     } else { //we are on the request screen
       if ((millis() - requestsent) >= requesttimeout) { //waiting too long, send another request
         if ( lastrequestsent == 0 ) { //this should not be zero - we've sent a request
+//        We might be on the time/day setting screen - hold the tick button to exit.
+//        Doing that may take us _into_ the setting screen, but we'll come out the next time around.
+          pressButton(TICK_BUTTON, buttonhold);
           onreqscreen = 0; //try again
         } else {
           pressButton(TICK_BUTTON, buttonpress);
